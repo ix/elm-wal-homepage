@@ -5883,6 +5883,7 @@ var $author$project$Main$bookmarks = A2(
 	function ($) {
 		return $.bookmarks;
 	});
+var $author$project$Main$Add = {$: 'Add'};
 var $author$project$Main$Contract = {$: 'Contract'};
 var $author$project$Main$Create = {$: 'Create'};
 var $author$project$Main$Expand = {$: 'Expand'};
@@ -5892,6 +5893,17 @@ var $author$project$Main$Typing = F2(
 		return {$: 'Typing', a: a, b: b};
 	});
 var $author$project$Main$Url = {$: 'Url'};
+var $author$project$Main$icon = function (icn) {
+	switch (icn.$) {
+		case 'Expand':
+			return '';
+		case 'Contract':
+			return '';
+		default:
+			return '';
+	}
+};
+var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
@@ -5928,14 +5940,6 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $elm$html$Html$span = _VirtualDom_node('span');
 var $author$project$Main$ToggleAdd = {$: 'ToggleAdd'};
-var $author$project$Main$icon = function (icn) {
-	if (icn.$ === 'Expand') {
-		return '';
-	} else {
-		return '';
-	}
-};
-var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
 var $author$project$Main$toggle = function (icn) {
 	return A2(
 		$elm$html$Html$button,
@@ -5982,11 +5986,13 @@ var $author$project$Main$new = function (visible) {
 				$elm$html$Html$button,
 				_List_fromArray(
 					[
+						$elm$html$Html$Attributes$id('create'),
 						$elm$html$Html$Events$onClick($author$project$Main$Create)
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text('+')
+						$elm$html$Html$text(
+						$author$project$Main$icon($author$project$Main$Add))
 					]))
 			]) : _List_fromArray(
 			[

@@ -20,7 +20,7 @@ type Event =
   | Typing Field String
   | ToggleAdd
 
-type Icon = Expand | Contract
+type Icon = Expand | Contract | Add
 
 empty : Model
 empty = { bookmarks = Dict.empty, flux = { name = "", url = "", showAdd = False } }
@@ -79,6 +79,7 @@ icon : Icon -> String
 icon icn = case icn of
   Expand   -> ""
   Contract -> ""
+  Add   -> ""
              
 new : Bool -> Html Event
 new visible = Html.span [] <|
@@ -86,7 +87,7 @@ new visible = Html.span [] <|
       [ toggle Contract
       , Html.input  [ Html.type_ "text", Html.placeholder "Name", Html.onInput (Typing Name) ] []
       , Html.input  [ Html.type_ "text", Html.placeholder "URL", Html.onInput (Typing Url)  ] []
-      , Html.button [ Html.onClick Create ] [ Html.text "+" ]
+      , Html.button [ Html.id "create", Html.onClick Create ] [ Html.text <| icon Add ]
       ]
   else [toggle Expand]
 
