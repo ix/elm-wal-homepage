@@ -11,9 +11,9 @@ import Json.Decode     as Decode
 type alias URL = String
 type alias Bookmark = (String, URL)
 type alias Model = { bookmarks: Dict String URL, flux: Flux }
-type alias Flux = { name: String, url: URL, showAdd: Bool }
+type alias Flux = { name: String, url: URL, filter: String, showAdd: Bool }
 
-type Field = Name | Url
+type Field = Name | Url | Filter
 type Event =
     Create
   | Delete String
@@ -23,7 +23,7 @@ type Event =
 type Icon = Expand | Contract | Add
 
 empty : Model
-empty = { bookmarks = Dict.empty, flux = { name = "", url = "", showAdd = False } }
+empty = { bookmarks = Dict.empty, flux = { name = "", url = "", filter = "", showAdd = False } }
 
 main : Program Encode.Value Model Event
 main = Browser.element 
@@ -91,6 +91,9 @@ new visible = Html.span [] <|
       ]
   else [toggle Expand]
 
+filter : String -> List Bookmark -> List Bookmark
+filter str = List.filter (\(name, url) -> String.contains str name || String.contains str url)
+      
 port write : Encode.Value -> Cmd msg
 
 encode : Model -> Encode.Value
