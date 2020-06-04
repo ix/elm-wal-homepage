@@ -5865,7 +5865,7 @@ var $author$project$Main$bookmark = function (_v0) {
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text('x')
+						$elm$html$Html$text('')
 					]))
 			]));
 };
@@ -5883,7 +5883,9 @@ var $author$project$Main$bookmarks = A2(
 	function ($) {
 		return $.bookmarks;
 	});
+var $author$project$Main$Contract = {$: 'Contract'};
 var $author$project$Main$Create = {$: 'Create'};
+var $author$project$Main$Expand = {$: 'Expand'};
 var $author$project$Main$Name = {$: 'Name'};
 var $author$project$Main$Typing = F2(
 	function (a, b) {
@@ -5926,18 +5928,28 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $elm$html$Html$span = _VirtualDom_node('span');
 var $author$project$Main$ToggleAdd = {$: 'ToggleAdd'};
+var $author$project$Main$icon = function (icn) {
+	if (icn.$ === 'Expand') {
+		return '';
+	} else {
+		return '';
+	}
+};
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
-var $author$project$Main$toggle = A2(
-	$elm$html$Html$button,
-	_List_fromArray(
-		[
-			$elm$html$Html$Attributes$id('toggle'),
-			$elm$html$Html$Events$onClick($author$project$Main$ToggleAdd)
-		]),
-	_List_fromArray(
-		[
-			$elm$html$Html$text('...')
-		]));
+var $author$project$Main$toggle = function (icn) {
+	return A2(
+		$elm$html$Html$button,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$id('toggle'),
+				$elm$html$Html$Events$onClick($author$project$Main$ToggleAdd)
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text(
+				$author$project$Main$icon(icn))
+			]));
+};
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $author$project$Main$new = function (visible) {
 	return A2(
@@ -5945,7 +5957,7 @@ var $author$project$Main$new = function (visible) {
 		_List_Nil,
 		visible ? _List_fromArray(
 			[
-				$author$project$Main$toggle,
+				$author$project$Main$toggle($author$project$Main$Contract),
 				A2(
 				$elm$html$Html$input,
 				_List_fromArray(
@@ -5977,7 +5989,9 @@ var $author$project$Main$new = function (visible) {
 						$elm$html$Html$text('+')
 					]))
 			]) : _List_fromArray(
-			[$author$project$Main$toggle]));
+			[
+				$author$project$Main$toggle($author$project$Main$Expand)
+			]));
 };
 var $elm$virtual_dom$VirtualDom$node = function (tag) {
 	return _VirtualDom_node(

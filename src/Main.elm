@@ -20,6 +20,8 @@ type Event =
   | Typing Field String
   | ToggleAdd
 
+type Icon = Expand | Contract
+
 empty : Model
 empty = { bookmarks = Dict.empty, flux = { name = "", url = "", showAdd = False } }
 
@@ -67,21 +69,26 @@ bookmarks = List.map bookmark << Dict.toList << .bookmarks
 bookmark : Bookmark -> Html Event
 bookmark (name, destination) = Html.div [Html.class "bookmark"]
   [ Html.a [Html.href destination] [Html.text name]
-  , Html.button [Html.onClick (Delete name)] [Html.text "x"]
+  , Html.button [Html.onClick (Delete name)] [Html.text ""]
   ]
+    
+toggle : Icon -> Html Event
+toggle icn = Html.button [Html.id "toggle", Html.onClick ToggleAdd] [Html.text <| icon icn]
 
-toggle : Html Event
-toggle = Html.button [Html.id "toggle", Html.onClick ToggleAdd] [Html.text "..."]
-
+icon : Icon -> String
+icon icn = case icn of
+  Expand   -> ""
+  Contract -> ""
+             
 new : Bool -> Html Event
 new visible = Html.span [] <|
   if visible then
-      [ toggle
+      [ toggle Contract
       , Html.input  [ Html.type_ "text", Html.placeholder "Name", Html.onInput (Typing Name) ] []
       , Html.input  [ Html.type_ "text", Html.placeholder "URL", Html.onInput (Typing Url)  ] []
       , Html.button [ Html.onClick Create ] [ Html.text "+" ]
       ]
-  else [toggle]
+  else [toggle Expand]
 
 port write : Encode.Value -> Cmd msg
 
