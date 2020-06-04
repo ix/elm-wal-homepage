@@ -59,19 +59,19 @@ update event model =
             void { model | flux = { flux_ | showAdd = not flux_.showAdd } }
                            
 view : Model -> Html Event
-view model = Html.div [] <| bookmarks model ++ [new model.flux.showAdd]
+view model = Html.node "body" [] <| bookmarks model ++ [new model.flux.showAdd]
 
 bookmarks : Model -> List (Html Event)
 bookmarks = List.map bookmark << Dict.toList << .bookmarks
                  
 bookmark : Bookmark -> Html Event
-bookmark (name, destination) = Html.div []
+bookmark (name, destination) = Html.div [Html.class "bookmark"]
   [ Html.a [Html.href destination] [Html.text name]
   , Html.button [Html.onClick (Delete name)] [Html.text "x"]
   ]
 
 toggle : Html Event
-toggle = Html.button [Html.onClick ToggleAdd] [Html.text "..."]
+toggle = Html.button [Html.id "toggle", Html.onClick ToggleAdd] [Html.text "..."]
 
 new : Bool -> Html Event
 new visible = Html.span [] <|

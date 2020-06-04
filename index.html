@@ -3,7 +3,46 @@
   <head>
     <meta charset="UTF-8">
     <title>~</title>
+    <link rel="stylesheet" type="text/css" href="colors.css">
     <script type="text/javascript" src="elm.js"></script>
+    <style>
+      body {
+	  font-family: "IBM Plex Sans";
+	  background: var(--background);
+	  display: flex;
+	  flex-direction: column;
+	  align-items: center;
+	  height: 100%;
+      }
+
+      .bookmark > a {
+	  font-size: 2rem;
+	  color: var(--color4);
+	  opacity: 0.7;
+	  font-style: italic;
+      }
+
+      .bookmark > a:hover { opacity: 1; }
+
+      .bookmark > button {
+	  color: var(--foreground);
+	  background: none;
+	  border: none;
+	  opacity: 0.7;
+      }
+
+      .bookmark > button:hover { opacity: 1; }
+
+      #toggle {
+	  background: none;
+	  color: var(--foreground);
+	  border: none;
+	  font-size: 1.5rem;
+	  opacity: 0.7;
+      }
+
+      #toggle:hover { opacity: 1; }
+    </style>
   </head>
   <body>
   </body>
