@@ -5277,7 +5277,7 @@ var $elm$json$Json$Decode$dict = function (decoder) {
 };
 var $author$project$Main$empty = {
 	bookmarks: $elm$core$Dict$empty,
-	flux: {name: '', showAdd: false, url: ''}
+	flux: {filter: '', name: '', showAdd: false, showFilter: false, url: ''}
 };
 var $elm$core$Result$map = F2(
 	function (func, ra) {
@@ -5324,6 +5324,50 @@ var $author$project$Main$load = function (flags) {
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $author$project$Main$Nothing = {$: 'Nothing'};
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
+	});
+var $elm$core$Task$onError = _Scheduler_onError;
+var $elm$core$Task$attempt = F2(
+	function (resultToMessage, task) {
+		return $elm$core$Task$command(
+			$elm$core$Task$Perform(
+				A2(
+					$elm$core$Task$onError,
+					A2(
+						$elm$core$Basics$composeL,
+						A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
+						$elm$core$Result$Err),
+					A2(
+						$elm$core$Task$andThen,
+						A2(
+							$elm$core$Basics$composeL,
+							A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
+							$elm$core$Result$Ok),
+						task))));
+	});
+var $elm$browser$Browser$Dom$focus = _Browser_call('focus');
+var $author$project$Main$focus = function (m) {
+	return _Utils_Tuple2(
+		m,
+		A2(
+			$elm$core$Task$attempt,
+			function (_v0) {
+				return $author$project$Main$Nothing;
+			},
+			$elm$browser$Browser$Dom$focus('filter')));
+};
+var $author$project$Main$modifyFlux = F2(
+	function (m, f) {
+		return _Utils_update(
+			m,
+			{
+				flux: f(m.flux)
+			});
+	});
 var $elm$core$Basics$not = _Basics_not;
 var $elm$core$Dict$getMin = function (dict) {
 	getMin:
@@ -5758,44 +5802,81 @@ var $author$project$Main$update = F2(
 							bookmarks: A2($elm$core$Dict$remove, name, model.bookmarks)
 						}));
 			case 'Typing':
-				if (event.a.$ === 'Name') {
-					var _v1 = event.a;
-					var name = event.b;
-					var flux_ = model.flux;
-					return $author$project$Main$void(
-						_Utils_update(
-							model,
-							{
-								flux: _Utils_update(
-									flux_,
-									{name: name})
-							}));
-				} else {
-					var _v2 = event.a;
-					var url = event.b;
-					var flux_ = model.flux;
-					return $author$project$Main$void(
-						_Utils_update(
-							model,
-							{
-								flux: _Utils_update(
-									flux_,
-									{url: url})
-							}));
+				switch (event.a.$) {
+					case 'Name':
+						var _v1 = event.a;
+						var name = event.b;
+						return $author$project$Main$void(
+							A2(
+								$author$project$Main$modifyFlux,
+								model,
+								function (f) {
+									return _Utils_update(
+										f,
+										{name: name});
+								}));
+					case 'Url':
+						var _v2 = event.a;
+						var url = event.b;
+						return $author$project$Main$void(
+							A2(
+								$author$project$Main$modifyFlux,
+								model,
+								function (f) {
+									return _Utils_update(
+										f,
+										{url: url});
+								}));
+					default:
+						var _v3 = event.a;
+						var str = event.b;
+						return $author$project$Main$void(
+							A2(
+								$author$project$Main$modifyFlux,
+								model,
+								function (f) {
+									return _Utils_update(
+										f,
+										{filter: str});
+								}));
 				}
-			default:
-				var flux_ = model.flux;
+			case 'ToggleAdd':
 				return $author$project$Main$void(
-					_Utils_update(
+					A2(
+						$author$project$Main$modifyFlux,
 						model,
-						{
-							flux: _Utils_update(
-								flux_,
-								{showAdd: !flux_.showAdd})
+						function (f) {
+							return _Utils_update(
+								f,
+								{showAdd: !f.showAdd});
 						}));
+			case 'ShowFilter':
+				return $author$project$Main$focus(
+					A2(
+						$author$project$Main$modifyFlux,
+						model,
+						function (f) {
+							return _Utils_update(
+								f,
+								{showFilter: true});
+						}));
+			case 'HideFilter':
+				return $author$project$Main$void(
+					A2(
+						$author$project$Main$modifyFlux,
+						model,
+						function (f) {
+							return _Utils_update(
+								f,
+								{filter: '', showFilter: false});
+						}));
+			default:
+				return $author$project$Main$void(model);
 		}
 	});
 var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $author$project$Main$HideFilter = {$: 'HideFilter'};
+var $author$project$Main$ShowFilter = {$: 'ShowFilter'};
 var $author$project$Main$Delete = function (a) {
 	return {$: 'Delete', a: a};
 };
@@ -5869,20 +5950,34 @@ var $author$project$Main$bookmark = function (_v0) {
 					]))
 			]));
 };
-var $elm$core$Basics$composeL = F3(
-	function (g, f, x) {
-		return g(
-			f(x));
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
 	});
-var $author$project$Main$bookmarks = A2(
-	$elm$core$Basics$composeL,
-	A2(
-		$elm$core$Basics$composeL,
-		$elm$core$List$map($author$project$Main$bookmark),
-		$elm$core$Dict$toList),
-	function ($) {
-		return $.bookmarks;
-	});
+var $author$project$Main$filter = function (str) {
+	return $elm$core$List$filter(
+		function (_v0) {
+			var name = _v0.a;
+			var url = _v0.b;
+			return A2($elm$core$String$contains, str, name) || A2($elm$core$String$contains, str, url);
+		});
+};
+var $author$project$Main$bookmarks = function (m) {
+	return A2(
+		$elm$core$List$map,
+		$author$project$Main$bookmark,
+		A2(
+			$author$project$Main$filter,
+			m.flux.filter,
+			$elm$core$Dict$toList(m.bookmarks)));
+};
 var $author$project$Main$Add = {$: 'Add'};
 var $author$project$Main$Contract = {$: 'Contract'};
 var $author$project$Main$Create = {$: 'Create'};
@@ -6004,17 +6099,114 @@ var $elm$virtual_dom$VirtualDom$node = function (tag) {
 		_VirtualDom_noScript(tag));
 };
 var $elm$html$Html$node = $elm$virtual_dom$VirtualDom$node;
+var $elm$json$Json$Decode$andThen = _Json_andThen;
+var $elm$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
+				switch (_v1.$) {
+					case 'LT':
+						var $temp$targetKey = targetKey,
+							$temp$dict = left;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+					case 'EQ':
+						return $elm$core$Maybe$Just(value);
+					default:
+						var $temp$targetKey = targetKey,
+							$temp$dict = right;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+				}
+			}
+		}
+	});
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Main$keyEvent = function (pairs) {
+	var dict = $elm$core$Dict$fromList(pairs);
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		function (key) {
+			return $elm$json$Json$Decode$succeed(
+				A2(
+					$elm$core$Maybe$withDefault,
+					$author$project$Main$Nothing,
+					A2($elm$core$Dict$get, key, dict)));
+		},
+		A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string));
+};
+var $author$project$Main$onKeyup = function (pairs) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'keyup',
+		$author$project$Main$keyEvent(pairs));
+};
+var $author$project$Main$Filter = {$: 'Filter'};
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$autofocus = $elm$html$Html$Attributes$boolProperty('autofocus');
+var $author$project$Main$search = function (visible) {
+	return (!visible) ? _List_Nil : _List_fromArray(
+		[
+			A2(
+			$elm$html$Html$input,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$type_('text'),
+					$elm$html$Html$Attributes$id('filter'),
+					$elm$html$Html$Attributes$placeholder('Search'),
+					$elm$html$Html$Attributes$autofocus(true),
+					$elm$html$Html$Events$onInput(
+					$author$project$Main$Typing($author$project$Main$Filter))
+				]),
+			_List_Nil)
+		]);
+};
 var $author$project$Main$view = function (model) {
 	return A3(
 		$elm$html$Html$node,
 		'body',
-		_List_Nil,
+		_List_fromArray(
+			[
+				$author$project$Main$onKeyup(
+				_List_fromArray(
+					[
+						_Utils_Tuple2('/', $author$project$Main$ShowFilter),
+						_Utils_Tuple2('Escape', $author$project$Main$HideFilter)
+					]))
+			]),
 		_Utils_ap(
-			$author$project$Main$bookmarks(model),
-			_List_fromArray(
-				[
-					$author$project$Main$new(model.flux.showAdd)
-				])));
+			$author$project$Main$search(model.flux.showFilter),
+			_Utils_ap(
+				$author$project$Main$bookmarks(model),
+				_List_fromArray(
+					[
+						$author$project$Main$new(model.flux.showAdd)
+					]))));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{

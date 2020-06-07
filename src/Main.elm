@@ -1,17 +1,19 @@
 port module Main exposing (..)
 
 import Browser
+import Browser.Dom     as Dom
 import Dict            as Dict exposing (Dict)
 import Html            as Html exposing (Html)
 import Html.Attributes as Html
 import Html.Events     as Html
 import Json.Encode     as Encode
 import Json.Decode     as Decode
+import Task            as Task
 
 type alias URL = String
 type alias Bookmark = (String, URL)
 type alias Model = { bookmarks: Dict String URL, flux: Flux }
-type alias Flux = { name: String, url: URL, filter: String, showAdd: Bool }
+type alias Flux = { name: String, url: URL, filter: String, showAdd: Bool, showFilter: Bool }
 
 type Field = Name | Url | Filter
 type Event =
@@ -19,11 +21,14 @@ type Event =
   | Delete String
   | Typing Field String
   | ToggleAdd
+  | ShowFilter
+  | HideFilter
+  | Nothing
 
 type Icon = Expand | Contract | Add
 
 empty : Model
-empty = { bookmarks = Dict.empty, flux = { name = "", url = "", filter = "", showAdd = False } }
+empty = { bookmarks = Dict.empty, flux = { name = "", url = "", filter = "", showAdd = False, showFilter = False } }
 
 main : Program Encode.Value Model Event
 main = Browser.element 
@@ -45,6 +50,10 @@ void m = (m, Cmd.none)
 save : Model -> (Model, Cmd Event)
 save m = (m, write <| encode m)
 
+-- for the filter box, specifically
+focus : Model -> (Model, Cmd Event)
+focus m = (m, Task.attempt (\_ -> Nothing) (Dom.focus "filter"))
+         
 update : Event -> Model -> (Model, Cmd Event)
 update event model =
     case event of
@@ -53,18 +62,30 @@ update event model =
                 save { model | bookmarks = Dict.insert model.flux.name model.flux.url model.bookmarks }
             else void model
         Delete name        -> save { model | bookmarks = Dict.remove name model.bookmarks }
-        Typing Name name   -> let flux_ = model.flux in
-            void { model | flux = { flux_ | name = name } }
-        Typing Url url     -> let flux_ = model.flux in
-            void { model | flux = { flux_ | url = url } }
-        ToggleAdd          -> let flux_ = model.flux in
-            void { model | flux = { flux_ | showAdd = not flux_.showAdd } }
-                           
-view : Model -> Html Event
-view model = Html.node "body" [] <| bookmarks model ++ [new model.flux.showAdd]
+        Typing Name name   -> void  <| modifyFlux model (\f -> { f | name = name })
+        Typing Url url     -> void  <| modifyFlux model (\f -> { f | url = url })
+        Typing Filter str  -> void  <| modifyFlux model (\f -> { f | filter = str })
+        ToggleAdd          -> void  <| modifyFlux model (\f -> { f | showAdd = not f.showAdd })
+        ShowFilter         -> focus <| modifyFlux model (\f -> { f | showFilter = True })
+        HideFilter         -> void  <| modifyFlux model (\f -> { f | showFilter = False, filter = "" })
+        Nothing            -> void model
 
+modifyFlux : Model -> (Flux -> Flux) -> Model
+modifyFlux m f = { m | flux = f m.flux }
+                
+view : Model -> Html Event
+view model = Html.node "body" [ onKeyup [("/", ShowFilter), ("Escape", HideFilter)] ] <| search model.flux.showFilter ++ bookmarks model ++ [new model.flux.showAdd]
+
+onKeyup : List (String, Event) -> Html.Attribute Event
+onKeyup pairs = Html.on "keyup" (keyEvent pairs)
+
+keyEvent : List (String, Event) -> Decode.Decoder Event
+keyEvent pairs = let dict = Dict.fromList pairs in
+  Decode.field "key" Decode.string
+  |> Decode.andThen (\key -> Decode.succeed (Maybe.withDefault Nothing <| Dict.get key dict ))
+     
 bookmarks : Model -> List (Html Event)
-bookmarks = List.map bookmark << Dict.toList << .bookmarks
+bookmarks m = List.map bookmark <| filter m.flux.filter <|  Dict.toList <| m.bookmarks
                  
 bookmark : Bookmark -> Html Event
 bookmark (name, destination) = Html.div [Html.class "bookmark"]
@@ -79,7 +100,7 @@ icon : Icon -> String
 icon icn = case icn of
   Expand   -> ""
   Contract -> ""
-  Add   -> ""
+  Add      -> ""
              
 new : Bool -> Html Event
 new visible = Html.span [] <|
@@ -91,6 +112,17 @@ new visible = Html.span [] <|
       ]
   else [toggle Expand]
 
+search : Bool -> List (Html Event)
+search visible = if not visible then []
+  else [Html.input
+            [ Html.type_ "text"
+            , Html.id "filter"
+            , Html.placeholder "Search"
+            , Html.autofocus True
+            , Html.onInput (Typing Filter)
+            ] []
+       ]
+      
 filter : String -> List Bookmark -> List Bookmark
 filter str = List.filter (\(name, url) -> String.contains str name || String.contains str url)
       
