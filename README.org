@@ -8,5 +8,9 @@ It uses the colors from the current ~pywal~ theme, so ~$HOME/.cache/wal/colors.c
 It stores bookmarks as key/value pairs in LocalStorage.
 You can filter on bookmarks by name/url.
 
+** What are the keybinds?
+| ~/~      | Start filtering |
+| ~Escape~ | Stop filtering  |
+
 ** Will you add rearranging bookmarks?
 No, that's why there's a filter. But I might make it support regex.
