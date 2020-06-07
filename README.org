@@ -1,0 +1,12 @@
+* elm-wal-homepage
+
+[[./readme/elm.gif]]
+
+** What is it?
+A homepage/new tab page written in Elm.
+It uses the colors from the current ~pywal~ theme, so ~$HOME/.cache/wal/colors.css~.
+It stores bookmarks as key/value pairs in LocalStorage.
+You can filter on bookmarks by name/url.
+
+** Will you add rearranging bookmarks?
+No, that's why there's a filter. But I might make it support regex.
