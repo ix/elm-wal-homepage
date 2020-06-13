@@ -9,7 +9,7 @@ It stores bookmarks as key/value pairs in LocalStorage.
 You can filter on bookmarks by name/url.
 
 ** What are the keybinds?
-| ~/~      | Start filtering |
+| ~Alt-/~  | Start filtering |
 | ~Escape~ | Stop filtering  |
 
 ** Will you add rearranging bookmarks?
