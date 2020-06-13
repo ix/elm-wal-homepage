@@ -23,10 +23,35 @@ type Event =
   | ToggleAdd
   | ShowFilter
   | HideFilter
-  | Nothing
+  | Idle
 
 type Icon = Expand | Contract | Add
 
+type Modifier = Ctrl | Alt | Meta | Shift
+
+keyFromModifier : Modifier -> String
+keyFromModifier modkey =
+    case modkey of
+        Ctrl  -> "ctrlKey"
+        Alt   -> "altKey"
+        Meta  -> "metaKey"
+        Shift -> "shiftKey"
+                             
+    
+type alias Keybind =
+    { key: String
+    , event: Event
+    , modifier: Maybe Modifier
+    }
+
+type alias Keypress =
+    { key: String
+    , ctrl: Bool
+    , alt: Bool
+    , meta: Bool
+    , shift: Bool
+    }
+    
 empty : Model
 empty = { bookmarks = Dict.empty, flux = { name = "", url = "", filter = "", showAdd = False, showFilter = False } }
 
@@ -52,7 +77,7 @@ save m = (m, write <| encode m)
 
 -- for the filter box, specifically
 focus : Model -> (Model, Cmd Event)
-focus m = (m, Task.attempt (\_ -> Nothing) (Dom.focus "filter"))
+focus m = (m, Task.attempt (\_ -> Idle) (Dom.focus "filter"))
          
 update : Event -> Model -> (Model, Cmd Event)
 update event model =
@@ -68,21 +93,53 @@ update event model =
         ToggleAdd          -> void  <| modifyFlux model (\f -> { f | showAdd = not f.showAdd })
         ShowFilter         -> focus <| modifyFlux model (\f -> { f | showFilter = True })
         HideFilter         -> void  <| modifyFlux model (\f -> { f | showFilter = False, filter = "" })
-        Nothing            -> void model
+        Idle               -> void model
 
 modifyFlux : Model -> (Flux -> Flux) -> Model
 modifyFlux m f = { m | flux = f m.flux }
                 
 view : Model -> Html Event
-view model = Html.node "body" [ onKeyup [("/", ShowFilter), ("Escape", HideFilter)] ] <| search model.flux.showFilter ++ bookmarks model ++ [new model.flux.showAdd]
+view model =
+    Html.node "body" [ onKeyup [Keybind "/" ShowFilter (Just Alt), Keybind "Escape" HideFilter Nothing] ]
+        <| search model.flux.showFilter ++ bookmarks model ++ [new model.flux.showAdd]
 
-onKeyup : List (String, Event) -> Html.Attribute Event
-onKeyup pairs = Html.on "keyup" (keyEvent pairs)
+find : (a -> Bool) -> List a -> Maybe a
+find pred list =
+    case list of
+        []       -> Nothing
+        (x::xs) -> if pred x then Just x else find pred xs
+              
+onKeyup : List Keybind -> Html.Attribute Event
+onKeyup keybinds = Html.on "keyup" (keyEvent keybinds)
 
-keyEvent : List (String, Event) -> Decode.Decoder Event
-keyEvent pairs = let dict = Dict.fromList pairs in
-  Decode.field "key" Decode.string
-  |> Decode.andThen (\key -> Decode.succeed (Maybe.withDefault Nothing <| Dict.get key dict ))
+findEventOrIdle : (Keybind -> Bool) -> List Keybind -> Event
+findEventOrIdle pred = find pred >> Maybe.map .event >> Maybe.withDefault Idle
+
+keyPressDecoder : Decode.Decoder Keypress
+keyPressDecoder =
+    let k = Decode.field "key" Decode.string
+        c = Decode.field (keyFromModifier Ctrl) Decode.bool
+        a = Decode.field (keyFromModifier Alt) Decode.bool
+        m = Decode.field (keyFromModifier Meta) Decode.bool
+        s = Decode.field (keyFromModifier Shift) Decode.bool
+    in
+    Decode.map5 Keypress k c a m s
+
+hasModifier : Keypress -> Bool
+hasModifier kp = kp.ctrl || kp.alt || kp.meta || kp.shift
+        
+matches : Keypress -> Keybind -> Bool
+matches kp kb =
+    case kb.modifier of
+        Nothing    -> if not <| hasModifier kp  then kb.key == kp.key else False
+        Just Ctrl  -> if not kp.ctrl then False else kb.key == kp.key
+        Just Alt   -> if not kp.alt then False else kb.key == kp.key
+        Just Meta  -> if not kp.meta then False else kb.key == kp.key
+        Just Shift -> if not kp.shift then False else kb.key == kp.key                                          
+        
+keyEvent : List Keybind -> Decode.Decoder Event
+keyEvent keybinds = keyPressDecoder
+  |> Decode.andThen (\kp -> Decode.succeed <| findEventOrIdle (matches kp) keybinds)
      
 bookmarks : Model -> List (Html Event)
 bookmarks m = List.map bookmark <| filter m.flux.filter <|  Dict.toList <| m.bookmarks
